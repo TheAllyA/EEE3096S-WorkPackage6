@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, sel3,w_r);
+module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, sel3,w_r, regfileout0, regfileout1, regfileout2, regfileout3);
     //Defaults unless overwritten during instantiation
     parameter DATA_WIDTH = 8; //8 bit wide data
     parameter ADDR_BITS = 5; //32 Addresses
@@ -16,10 +16,19 @@ module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, se
     output reg [DATA_WIDTH-1:0] offset;
     output reg [3:0] opcode;
     output reg sel1, sel3, w_r;
+  	output reg [DATA_WIDTH-1:0] regfileout0;
+  	output reg [DATA_WIDTH-1:0] regfileout1;
+  	output reg [DATA_WIDTH-1:0] regfileout2;
+  	output reg [DATA_WIDTH-1:0] regfileout3;
 
     //REGISTER FILE: CU internal register file of 4 registers.  This is a over simplication of a real solution
     reg [DATA_WIDTH-1:0] regfile [0:3];
     reg [INSTR_WIDTH-1:0]instruction;
+  
+  assign regfileout0 = regfile[0] ;
+  assign regfileout1 = regfile[1] ;
+  assign regfileout2 = regfile[2] ;
+  assign regfileout3 = regfile[3] ;
     
     //STATES
     parameter RESET = 4'b0000;
@@ -82,6 +91,13 @@ module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, se
                    * FILL IN CORRECT CODE HERE
                    *
                    ********************************************/ 
+                   operand1 <= regfile[instruction[15:14]]; 
+                   operand2 <= regfile[instruction[17:16]];
+                   offset <= instruction[11:4];
+                   opcode <= instruction[3:0];
+                   sel1 <= 0; //pass data_out
+                   sel3 <= 1; //pass offset
+                   w_r <= 0;
 
                 end
             end
@@ -111,6 +127,13 @@ module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, se
                    * FILL IN CORRECT CODE HERE
                    *
                    ********************************************/ 
+                  operand1 <= regfile[instruction[15:14]]; 
+                  operand2 <= regfile[instruction[17:16]];
+                  offset <= instruction[11:4];
+                  opcode <= instruction[3:0];
+                  sel1 <= 0; //pass data_out
+                  sel3 <= 1; //pass offset
+                  w_r <= 1;
                 end
             end
             MEM_ACCESS: begin //#3
@@ -130,7 +153,15 @@ module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, se
                    * Take note of what the next state should be according to
                    * the FSM
                    *
-                   ********************************************/ 
+                   ********************************************/
+                   state = DECODE;
+                   operand1 <= regfile[instruction[15:14]]; 
+                   operand2 <= regfile[instruction[17:16]];
+                   offset <= instruction[11:4];
+                   opcode <= instruction[3:0];
+                   sel1 <= 0; //pass data_out
+                   sel3 <= 1; //pass offset
+                   w_r <= 1;
                 end
             end
             WRITE_BACK: begin //#4
@@ -151,6 +182,13 @@ module CU (clk,rst, instr, result2, operand1, operand2, offset, opcode, sel1, se
                    * FILL IN CORRECT CODE HERE
                    *
                    ********************************************/ 
+                    operand1 <= regfile[instruction[15:14]]; 
+                    operand2 <= regfile[instruction[17:16]];
+                    offset <= instruction[11:4];
+                    opcode <= instruction[3:0];
+                    sel1 <= 0; //pass data_out
+                    sel3 <= 1; //pass offset
+                    w_r <= 0;
                     
                 end else if (instruction[19:18] == 2'b10) begin //loadR             
                     regfile[instruction[17:16]] <= result2; //From data mem
